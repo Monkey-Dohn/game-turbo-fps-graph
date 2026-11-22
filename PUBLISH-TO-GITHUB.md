@@ -14,7 +14,7 @@
 | 本地 git 仓库 | 已 `git init -b main`；功能提交 `f94434b`（`feat: restore Game Turbo FPS graph and inline FPS readout (v17)`），其后有发布手册 docs commit |
 | 工作区 | `C:\Users\Dohn\Desktop\FPS帧率图改造`（目录名含中文，命令里务必加引号） |
 | `.gitignore` | 已排除 `fpsgraph*.apk`、`*.idsig`、`classes.dex`、`unsigned2.apk`、`aligned.apk`、截图、`*.log` |
-| 入库文件（11 个） | `.gitignore`、`AndroidManifest.xml`、`LICENSE`、`PUBLISH-TO-GITHUB.md`、`README.md`、`debug.keystore`、`rebuild.ps1`、`src/Main.smali`、`src/PanelHook.smali`、`unsigned.apk`、`xposed_init.txt` |
+| 入库文件（12 个） | `.gitignore`、`AndroidManifest.xml`、`LICENSE`、`PUBLISH-TO-GITHUB.md`、`README.md`、`debug.keystore`、`docs/DEVELOPMENT.md`、`rebuild.ps1`、`src/Main.smali`、`src/PanelHook.smali`、`unsigned.apk`、`xposed_init.txt` |
 | `gh` CLI | 已装 2.105.0，路径 `C:\Program Files\GitHub CLI\gh.exe`（不在 PATH 里，用绝对路径或先加 PATH） |
 | SSH key | 已生成 `C:\Users\Dohn\.ssh\id_ed25519_github`（ed25519，无 passphrase），公钥见第 3 步 |
 | SSH 登记 | 因发布 token 仅有 `repo` 权限，公钥已作为仓库 `game-turbo-fps-graph` 的 **deploy key（read_only=false）** 登记；不是账号级 SSH key |
@@ -185,7 +185,7 @@ git push origin v17
 - [x] token 已校验（本次用 `GH_TOKEN` 环境变量，未持久化到 gh 配置）
 - [x] `https://github.com/Monkey-Dohn/game-turbo-fps-graph` 可访问且为 Public（API 校验）
 - [x] 首页渲染的是项目 `README.md`
-- [x] 仓库里只有 11 个文件，**没有** `fpsgraph.apk` / `classes.dex` / `unsigned2.apk` / `aligned.apk`
+- [x] 仓库里只有 12 个文件，**没有** `fpsgraph.apk` / `classes.dex` / `unsigned2.apk` / `aligned.apk`
 - [x] `main` 分支已推送（含 `f94434b` 及其后的 docs commit）
 - [x] `v17` tag 已推送
 
