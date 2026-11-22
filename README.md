@@ -8,6 +8,20 @@
 >
 > 许可证：MIT（见 [LICENSE](LICENSE)）。
 
+## 直接安装（普通用户）
+
+不需要自己编译，直接下载 Release 里的签名 APK：
+
+1. 打开 [Releases](https://github.com/Monkey-Dohn/game-turbo-fps-graph/releases/latest)，下载 `game-turbo-fps-graph-v17.apk`。
+2. 手机需已解锁 BL，并装好 **Magisk + Zygisk + LSPosed**。
+3. 安装 APK；在 LSPosed 中启用模块 **FPS Graph**，作用域只勾选 **`com.miui.securitycenter`**。
+4. 强制停止 `com.miui.securitycenter`，或重启手机；打开游戏后从屏幕左侧滑出 Game Turbo 侧边栏，进入性能面板。
+5. 顶部应出现帧率曲线，CPU / 内存中间显示内联 `FPS` 读数。曲线刚打开只有左侧短段，约 60 秒铺满。
+
+> 仅保证文档中记录的 `M2007J17C` / HyperOS `4.0.5.0.XPCCNXM` / `com.miui.securitycenter` `13.6.5-261003.0.1`。其它机型或系统版本资源 ID 可能不同，需自行核对；停用模块即可回滚，不会修改系统分区。
+
+---
+
 - 生成时间：2026-11-22
 - 设备：Xiaomi `M2007J17C` / `gauguinpro`
 - 系统：HyperOS `4.0.5.0.XPCCNXM`，Android 17 / SDK 37，build `CP2A.260605.016`

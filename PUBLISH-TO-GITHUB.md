@@ -158,9 +158,11 @@ git tag -a v17 -m "v17: fix idempotent guard (if-ne -> if-eq), null-check findCl
 git push origin v17
 ```
 
-> **不要**把 `fpsgraph.apk` 传进仓库（已被 `.gitignore` 挡掉）。确实想要安装包时，单独建 release 附件：
-> `gh release create v17 --title "v17" --notes "..." "C:\Users\Dohn\Desktop\FPS帧率图改造\fpsgraph.apk"`
-> 但按用户习惯，本地安装包装完即删；仓库里保留源码 + `rebuild.ps1` 即可重建。
+> **不要**把 `fpsgraph.apk` 传进仓库（已被 `.gitignore` 挡掉）。安装包作为 **Release 附件** 发布：
+>
+> 已创建 `v17` Release，附件名 `game-turbo-fps-graph-v17.apk`，12,755 B，SHA256 `231B0FE06CBEFD8A3937156245ED922F0018BFB9BDF019277E2AB5FB74EBD00F`。
+>
+> 复现命令：`gh release create v17 --verify-tag --title "v17" --notes "..." "fpsgraph.apk"`；上传后可删除本地安装包，仓库里只保留源码 + `rebuild.ps1`。
 
 ---
 
