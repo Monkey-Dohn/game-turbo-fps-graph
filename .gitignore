@@ -1,0 +1,13 @@
+# 签名后的安装包（按使用习惯安装后即删除，不入库）
+fpsgraph*.apk
+*.idsig
+
+# rebuild.ps1 生成的中间产物，可随时重建
+classes.dex
+unsigned2.apk
+aligned.apk
+
+# 临时截图 / 日志
+s_*.png
+s*.png
+*.log
