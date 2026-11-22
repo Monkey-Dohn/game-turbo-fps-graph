@@ -1,23 +1,19 @@
-# Game Turbo FPS Graph
+# 给小米澎湃 OS4 的 Game Turbo 性能面板恢复帧率曲线
 
-给小米 / 澎湃 OS 的 **Game Turbo 性能面板**恢复被新版布局隐藏的帧率曲线，并把大号 FPS 数字改成 CPU / 内存中间的极简内联读数。
-
-*Restore the hidden frame-rate graph in Xiaomi Game Turbo and turn the FPS number into a minimal inline readout.*
-
-**v17** · [下载 APK](https://github.com/Monkey-Dohn/game-turbo-fps-graph/releases/latest) · [Releases](https://github.com/Monkey-Dohn/game-turbo-fps-graph/releases) · [源码](https://github.com/Monkey-Dohn/game-turbo-fps-graph) · [MIT License](LICENSE)
-
-> 这是一个 **LSPosed 模块**，不是普通独立 App。需要解锁 BL、Magisk、Zygisk 和 LSPosed。
+> v17 过程记录：在不修改系统 APK 的前提下，把被新版布局隐藏的 `FrameRateView` 恢复出来，并把大号 FPS 数字改成 CPU / 内存中间的极简内联读数。
+>
+> 本文只记录实现过程与关键结论，不包含分发说明。
 
 ---
 
 ## 效果
 
-| | 默认 Game Turbo | 安装后 |
+| | 改造前 | 改造后 |
 |---|---|---|
-| 帧率曲线 | 被隐藏，只剩表盘和大号数字 | 顶部显示约 60dp 高的青色曲线 |
+| 帧率曲线 | 被隐藏，只剩圆形表盘和大号数字 | 顶部显示约 60dp 高的青色曲线 |
 | 圆形表盘 | 显示 | 隐藏 |
 | FPS 数字 | 居中大号数字 | 移到 CPU / 内存中间：`82 FPS` |
-| 样式 | — | 无背景、无描边，数字 16sp 青色，`FPS` 8sp 灰白 |
+| 样式 | — | 无背景、无描边；数字 16sp 青色，`FPS` 8sp 灰白 |
 | 曲线数据 | — | 约 1 秒 1 点，刚打开只有左侧短段，约 60 秒铺满 |
 
 示意：
@@ -34,51 +30,7 @@
 
 ---
 
-## 下载安装
-
-### 直接下载
-
-- [最新 Release](https://github.com/Monkey-Dohn/game-turbo-fps-graph/releases/latest)
-- 当前附件：[`game-turbo-fps-graph-v17.apk`](https://github.com/Monkey-Dohn/game-turbo-fps-graph/releases/download/v17/game-turbo-fps-graph-v17.apk)
-
-APK 信息：
-
-| 项 | 值 |
-|---|---|
-| 包名 | `com.doubao.fpsgraph` |
-| versionName | `1.0` |
-| 大小 | 12,755 B |
-| SHA256 | `231B0FE06CBEFD8A3937156245ED922F0018BFB9BDF019277E2AB5FB74EBD00F` |
-| 签名 | Android Debug（个人模块，非生产签名） |
-
-### 前置条件
-
-- 小米 `M2007J17C` / `gauguinpro`
-- HyperOS `4.0.5.0.XPCCNXM`，Android 17 / SDK 37
-- Game Turbo 宿主：`com.miui.securitycenter` `13.6.5-261003.0.1`
-- Bootloader 已解锁
-- Magisk + Zygisk
-- LSPosed 2.2.1（模块声明 `xposedminversion=93`）
-
-### 安装步骤
-
-1. 下载并安装上面的 APK。
-2. 打开 **LSPosed**，进入「模块」，启用 **FPS Graph**。
-3. 在作用域里只勾选 **`com.miui.securitycenter`**；如果列表里看不到，先开启「显示系统应用」。
-4. 重启手机，或强制停止安全中心：
-
-   ```bash
-   adb shell am force-stop com.miui.securitycenter
-   ```
-
-5. 打开游戏，从屏幕左侧滑出 Game Turbo 侧边栏，进入性能面板。
-6. 顶部出现曲线、CPU / 内存中间出现内联 FPS 即生效。
-
-> 刚打开时曲线只有左侧一小段是正常的：数据约 1 秒 1 点，等待约 60 秒会铺满整个宽度。
-
----
-
-## 兼容性
+## 适用环境
 
 当前只在下面这套环境完整验证：
 
@@ -97,84 +49,175 @@ APK 信息：
 
 ---
 
-## 工作原理
+## 实现过程
 
-Game Turbo 没有独立 APK，它内嵌在系统应用 `com.miui.securitycenter` 里，并使用小米平台签名，不能直接重打包替换。
+### 1. 确认宿主
 
-新版布局把真正画曲线的 `FrameRateView` 设成了：
+Game Turbo 没有独立 APK，它内嵌在系统应用 `com.miui.securitycenter` 里，并使用小米平台签名。直接用 debug 签名重打包替换 `/product/priv-app/MIUISecurityCenter/MIUISecurityCenter.apk` 会签名不匹配，也不能随意写系统分区。
+
+所以这条路从一开始就排除了：
 
 ```text
-visibility = gone
-width = 0dp
-height = 0dp
+改系统 APK → 重新签名 → 替换系统分区
 ```
 
-曲线代码本身还在。模块在 `PerformancePanelViewNew.onAttachedToWindow` 时：
+只能走运行时 Hook：
 
-1. 找到 `FrameRateView`，恢复可见；
-2. 把高度改为 60dp、上边距 20dp，并移到顶部容器；
-3. 隐藏圆形表盘；
-4. 把原来的大号 FPS 数字移到 CPU / 内存中间，改成水平内联读数。
+```text
+LSPosed 模块 → 进入 securitycenter 进程 → Hook 面板 View → 改内存里的 View 树
+```
 
-整个过程只修改运行时的 View 树，**不修改系统分区，也不修改 APK 文件**。停用模块即可回滚。
+### 2. 定位被隐藏的控件
+
+新版布局：
+
+| 项目 | 值 |
+|---|---|
+| 布局名 | `game_toolbox_performance_panel_view_new` |
+| 资源 ID | `0x7f0e01e0` |
+| 默认文件 | `res/cO0.xml` |
+| 横屏变体 | `res/vN1.xml` |
+| sw600dp 横屏 | `res/Kgp.xml` |
+
+关键控件：
+
+| 控件 | 资源 ID | 原状态 |
+|---|---|---|
+| `FrameRateView` | `0x7f0b04f1` | `visibility=gone`，宽高 `0dp` |
+| 顶部 `FrameLayout` | `0x7f0b04a3` | 曲线的父容器 |
+| 圆形表盘 `ImageView` | `0x7f0b08fb` | 可见 |
+| 大号 FPS `TextView` | `0x7f0b0e85` | 可见，位于表盘下方 |
+| CPU / 内存行 | `0x7f0b082B` | `ConstraintLayout` |
+| CPU 列 | `0x7f0b07FF` | 用于克隆 `LayoutParams` |
+
+结论：曲线代码没有删，数据也还在，只是控件被设成了不可见、零尺寸。
+
+旧布局 `game_toolbox_performance_panel_view`（`0x7f0e01df`，`res/iwB.xml`）里 `FrameRateView` 是可见的、251×54dp，但旧类 `PerformancePanelView` 已经不在 dex 里，直接换布局会找不到类，所以放弃“切旧布局”的方案。
+
+### 3. 选择 Hook 点
+
+最终 Hook 的是：
+
+```text
+PerformancePanelViewNew.onAttachedToWindow
+```
+
+没有 Hook 构造器，原因是构造器可能错过已经预加载的面板；面板 attach 到窗口时，View 树已经完整，适合做恢复。
+
+Hook 里全部通过 `XposedHelpers` / 反射访问目标类，模块自身只引用 framework 类型和 Xposed API，避免：
+
+```text
+NoClassDefFoundError / check-cast 目标类失败
+```
+
+### 4. 恢复曲线
+
+在 `onAttachedToWindow` 之后：
+
+1. 找到 `FrameRateView`；
+2. 设 `visibility=VISIBLE`；
+3. 把布局参数改为 `MATCH_PARENT × 60dp`，`topMargin=20dp`；
+4. 从原父容器移除，再 `addView` 到顶部父容器的 index 0；
+5. 隐藏圆形表盘。
+
+曲线刚打开时只有左侧短段，因为 `MAX_FRAME_RATE_DATA_COUNT=240`，约 1 秒 1 点；等待约 60 秒才会铺满，这不是布局截断。
+
+### 5. 调整 FPS 读数
+
+原来的大号 `TextView` 是居中显示的。最终没有做“徽章”，而是把它改成水平内联：
+
+```text
+CPU 49%        82 FPS        内存 59%
+```
+
+做法：
+
+1. 把大号 TextView 从原父容器移除；
+2. 外面包一层透明 `FrameLayout`，布局参数克隆 CPU 列的 `ConstraintLayout.LayoutParams`；
+3. 内部放一个水平 `LinearLayout`，底部对齐；
+4. 数字 16sp、青色 `#FF3CEDFF`、`sans-serif-medium`、字距 `0.01`；
+5. `FPS` 标签 8sp、`#99FFFFFF`、字距 `0.12`、左 padding 4dp；
+6. 无背景、无描边、无圆角；整体 `translationY=5dp`；
+7. 最后调用 `setRenderEnabled(true)`。
+
+### 6. 验证与回滚
+
+验证点：
+
+- 顶部曲线出现，右侧刻度 120 / 90 / 60；
+- 圆形表盘消失；
+- CPU / 内存中间只有一个 `FPS` 读数，没有重复标签；
+- 数字随游戏帧率变化；
+- 曲线等待约 60 秒铺满；
+- LSPosed 日志只出现一次面板应用记录。
+
+回滚：
+
+```text
+LSPosed 停用模块 → 重启
+```
+
+模块只改运行时 View，不写系统分区，也不替换系统 APK。
 
 ---
 
-## 常见问题
+## 关键坑
 
-### 装了但没效果
+### 不能直接引用目标类
 
-按顺序检查：
+模块的类加载器看不到 `com.miui.securitycenter` 的类。不能写：
 
-1. LSPosed 里模块是否已启用；
-2. 作用域是否勾了 `com.miui.securitycenter`；
-3. 是否重启过，或执行过 `am force-stop com.miui.securitycenter`；
-4. 系统版本是否与上面的兼容表一致；
-5. 是否安装了旧版本模块；同包名换签名时需要先卸载旧版。
+```text
+check-cast 到 PerformancePanelViewNew / FrameRateView
+```
 
-### 曲线为什么只有一小段
+否则运行时会 `NoClassDefFoundError`。全部改用 `XposedHelpers.findClass`、`findViewByResourceId` 和反射字段/方法。
 
-正常。`FrameRateView` 约 1 秒采集 1 个点，`MAX_FRAME_RATE_DATA_COUNT=240`，所以要等约 60 秒才铺满，不是布局被截断。
+### ConstraintLayout 被 R8 混淆
 
-### 能不能不用 root
+`androidx.constraintlayout.widget.ConstraintLayout` 的内部类被混淆成类似 `ConstraintLayout$b`，不能按 `startToStart` 等字段名反射设置约束。
 
-不能。模块依赖 LSPosed，而 LSPosed 需要 Magisk/Zygisk 环境。
+可靠做法是克隆 CPU 列已有的 `LayoutParams`，再用 `XposedHelpers.newInstance` 复制，只改公开的 `width/height`。
 
-### 会不会改系统、影响 OTA
+### 构造器 Hook 会重复或错过
 
-不会写系统分区，也不替换系统 APK；它只在目标进程运行时改 View。停用模块或卸载后即恢复原样。但解锁 BL、root 本身会影响 OTA/保修状态，这部分风险由使用者承担。
+只 Hook 构造器时，预加载面板可能已存在；同时 Hook 构造器和 `onAttachedToWindow` 又会重复应用，出现两个 `FPS` 标签，曲线也被反复 reparent 导致数据重置。
 
-### 为什么 APK 这么小
+最终只 Hook `onAttachedToWindow`，并用静态 `int lastCurve` 保存 `System.identityHashCode(FrameRateView)`；同一个曲线 View 只应用一次。
 
-这是一个 smali 编写的 Hook 模块，只包含模块入口、Hook 代码和清单，不包含 Game Turbo 或系统应用的代码。
+### View tag 不能当守卫
 
-### 支持其它小米机型吗
+目标代码会覆盖 View 的 tag，用 `getTag()` 做“已处理”标记不可靠。这也是 v8–v13 出现重复标签的原因之一。
 
-不保证。不同 HyperOS 版本的布局资源 ID、类名混淆结果可能不同；需要重新核对 `FrameRateView`、`PerformancePanelViewNew` 和父容器 ID。当前仓库只针对上面这套环境。
+### 曲线短不是布局问题
 
-### 为什么是 debug 签名
-
-这是个人维护的 LSPosed 模块，没有上架应用商店。debug 签名不影响 LSPosed 使用；但同一包名的更新必须使用同一签名，否则要先卸载旧版。
-
-### 模块会联网/收集数据吗
-
-模块 manifest 未申请网络权限。它只在 `com.miui.securitycenter` 进程内做 View Hook。
+刚打开只有左侧一小段是正常累积过程。等待约 60 秒再判断。
 
 ---
 
-## 从源码构建
+## 迭代记录
 
-普通用户不需要自己编译，直接下载 Release APK 即可。
+- v1：直接 `check-cast` 目标类，运行时类加载失败；改为全反射。
+- v2–v4：恢复 `FrameRateView`，曲线重新出现。
+- v5：尝试按字段名设置 ConstraintLayout 约束，触发混淆字段异常；改为克隆 CPU 列 LayoutParams。
+- v6：裸数字放进 CPU/内存行，视觉不合格。
+- v7：尝试 FPS 徽章，被否决。
+- v8–v13：水平内联方案出现重复 `FPS` 标签、曲线数据重置；定位为重复 Hook / tag 守卫失效。
+- v15–v17：只 Hook `onAttachedToWindow`，加 `identityHashCode` 守卫；最终稳定为单个内联 `FPS`。
 
-### 依赖
+---
+
+## 从源码重建
+
+依赖：
 
 - Windows + PowerShell
 - Java 8
 - smali / dexlib2 / guava / antlr / jcommander / util
 - Android SDK Build-Tools（`zipalign`、`apksigner`）
-- ADB（仅 `-Install` 时需要）
+- ADB（仅部署调试时需要）
 
-### 构建
+步骤：
 
 1. 打开 `rebuild.ps1`，按本机路径修改顶部变量：
    - `$Java`
@@ -184,16 +227,12 @@ height = 0dp
 2. 执行：
 
    ```powershell
-   # 只构建并签名
    .\rebuild.ps1
-
-   # 构建、安装，并在安装后删除本地安装包
-   .\rebuild.ps1 -Install
    ```
 
-脚本会把 `src/*.smali` 汇编成 `classes.dex`，替换进 `unsigned.apk`，再对齐、签名，输出 `fpsgraph.apk`。签名 APK 不会提交进仓库。
+脚本会把 `src/*.smali` 汇编成 `classes.dex`，替换进 `unsigned.apk`，再对齐、签名，输出 `fpsgraph.apk`。构建产物不提交进仓库。
 
-> `debug.keystore` 只用于本地调试。如果要长期分发，建议换成自己的签名 key，并固定使用同一个 key 更新。
+> `debug.keystore` 只用于调试签名；长期维护建议换成自己的 key，并固定同一个 key 更新。
 
 ---
 
@@ -206,30 +245,16 @@ height = 0dp
 | `unsigned.apk` | 含 manifest、资源、assets 的基础 APK |
 | `AndroidManifest.xml` | LSPosed 模块清单 |
 | `xposed_init.txt` | 模块入口类 |
-| `rebuild.ps1` | 汇编、替换 dex、对齐、签名、可选安装 |
+| `rebuild.ps1` | 汇编、替换 dex、对齐、签名 |
 | `debug.keystore` | 调试签名，非生产 key |
-| `docs/DEVELOPMENT.md` | 开发与调试笔记：根因、资源 ID、构建、排错 |
-| `PUBLISH-TO-GITHUB.md` | GitHub 发布/Release 操作记录 |
+| `docs/DEVELOPMENT.md` | 更完整的开发与调试笔记 |
 | `LICENSE` | MIT |
-
----
-
-## 安全与回滚
-
-- 模块不修改 `/system`、`/product` 等系统分区，也不替换系统 APK。
-- 回滚：在 LSPosed 中停用模块 → 重启；或直接卸载模块。
-- 解锁 BL、root、LSPosed 都有设备风险；请先备份，不要在主业务机上直接试验。
-- 本模块只针对上述兼容环境，不保证其它机型/版本。
 
 ---
 
 ## 开发者文档
 
-更深入的内容在 [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md)：布局资源 ID、`PerformancePanelViewNew` / `FrameRateView` 结构、Smali Hook 细节、重复 Hook 的坑、构建命令和实测记录。
-
-发布流程见 [`PUBLISH-TO-GITHUB.md`](PUBLISH-TO-GITHUB.md)。
-
-问题反馈：[GitHub Issues](https://github.com/Monkey-Dohn/game-turbo-fps-graph/issues)
+更深入的内容在 [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md)：完整资源 ID、`PerformancePanelViewNew` / `FrameRateView` 结构、Smali 细节、构建命令、日志和实测记录。
 
 ---
 
@@ -237,4 +262,4 @@ height = 0dp
 
 [MIT](LICENSE)
 
-本项目与小米 / 小米澎湃 OS 官方无关；Xiaomi、HyperOS、Game Turbo 是其各自权利人的商标。使用本模块造成的设备问题由使用者自行承担。
+本项目与小米 / 小米澎湃 OS 官方无关；Xiaomi、HyperOS、Game Turbo 是其各自权利人的商标。使用本改造造成的设备问题由使用者自行承担。

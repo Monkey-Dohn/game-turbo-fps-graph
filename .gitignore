@@ -11,3 +11,6 @@ aligned.apk
 s_*.png
 s*.png
 *.log
+
+# 本地 README 预览页（不提交）
+README.preview.html
