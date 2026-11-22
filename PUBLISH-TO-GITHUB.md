@@ -2,7 +2,8 @@
 
 > 目标：把 `C:\Users\Dohn\Desktop\FPS帧率图改造` 这个本地 git 仓库发布为 **公开仓库** `game-turbo-fps-graph`。
 > 执行环境：**同一台 Windows 机器**（PowerShell 或 bash 均可，下文给 PowerShell）。所有路径均为本机绝对路径。
-> 当前状态：本地仓库已就绪、代码已 commit，**只缺 GitHub 认证**。
+> 当前状态：**已发布**到 <https://github.com/Monkey-Dohn/game-turbo-fps-graph>（Public，默认分支 `main`，已推 `v17` tag）。
+> 发布记录：`main` 已推送；`v17` tag 指向功能提交 `f94434b`。本机使用仓库 deploy key（写权限）通过 SSH 推送。
 
 ---
 
@@ -10,12 +11,13 @@
 
 | 项 | 状态 |
 |---|---|
-| 本地 git 仓库 | 已 `git init -b main`，commit `f94434b`（`feat: restore Game Turbo FPS graph and inline FPS readout (v17)`） |
+| 本地 git 仓库 | 已 `git init -b main`；功能提交 `f94434b`（`feat: restore Game Turbo FPS graph and inline FPS readout (v17)`），其后有发布手册 docs commit |
 | 工作区 | `C:\Users\Dohn\Desktop\FPS帧率图改造`（目录名含中文，命令里务必加引号） |
 | `.gitignore` | 已排除 `fpsgraph*.apk`、`*.idsig`、`classes.dex`、`unsigned2.apk`、`aligned.apk`、截图、`*.log` |
-| 入库文件（10 个） | `.gitignore`、`AndroidManifest.xml`、`LICENSE`、`README.md`、`debug.keystore`、`rebuild.ps1`、`src/Main.smali`、`src/PanelHook.smali`、`unsigned.apk`、`xposed_init.txt` |
+| 入库文件（11 个） | `.gitignore`、`AndroidManifest.xml`、`LICENSE`、`PUBLISH-TO-GITHUB.md`、`README.md`、`debug.keystore`、`rebuild.ps1`、`src/Main.smali`、`src/PanelHook.smali`、`unsigned.apk`、`xposed_init.txt` |
 | `gh` CLI | 已装 2.105.0，路径 `C:\Program Files\GitHub CLI\gh.exe`（不在 PATH 里，用绝对路径或先加 PATH） |
 | SSH key | 已生成 `C:\Users\Dohn\.ssh\id_ed25519_github`（ed25519，无 passphrase），公钥见第 3 步 |
+| SSH 登记 | 因发布 token 仅有 `repo` 权限，公钥已作为仓库 `game-turbo-fps-graph` 的 **deploy key（read_only=false）** 登记；不是账号级 SSH key |
 | SSH 配置 | `C:\Users\Dohn\.ssh\config` 已写入：`Host github.com → HostName ssh.github.com / Port 443 / IdentityFile ~/.ssh/id_ed25519_github` |
 | hosts | `C:\Windows\System32\drivers\etc\hosts` 已把 `github.com` 指向 `20.6.7.17`（原文件备份：`hosts.dsh-bak`） |
 | 真机验证 | v17 已安装并在设备 `bd1a576` 上实测通过（曲线恢复、表盘隐藏、内联 `84 FPS`） |
@@ -113,6 +115,16 @@ $gh = 'C:\Program Files\GitHub CLI\gh.exe'
 
 **期望**：`ssh-key list` 里出现该指纹；随后 `ssh -T git@github.com` 应返回 `Hi <LOGIN>! You've successfully authenticated...`（这条会走 `ssh.github.com:443`）。
 
+> **本次实际走的 deploy key**：发布 token 只有 `repo` 权限，没有 `admin:public_key`，不能调 `ssh-key add`。因此把同一公钥加成了仓库 deploy key（写权限），推送仍走 SSH：
+>
+> ```powershell
+> $pub = (Get-Content "$env:USERPROFILE\.ssh\id_ed25519_github.pub" -Raw).Trim()
+> & $gh api --method POST repos/<OWNER>/game-turbo-fps-graph/keys `
+>   -f title='game-turbo-fps-graph' -f key="$pub" -F read_only=false
+> ```
+>
+> 如果 token 带 `admin:public_key`，优先用上面的账号级 `ssh-key add`。
+
 ---
 
 ## 4. 推送
@@ -168,12 +180,12 @@ git push origin v17
 
 ## 7. 验收清单
 
-- [ ] `gh auth status` 显示已登录
-- [ ] `https://github.com/<LOGIN>/game-turbo-fps-graph` 可访问且为 Public
-- [ ] 首页渲染的是项目 `README.md`（含 MIT 许可说明）
-- [ ] 仓库里只有 10 个文件，**没有** `fpsgraph.apk` / `classes.dex` / `unsigned2.apk` / `aligned.apk`
-- [ ] `main` 分支最新 commit 是 `f94434b` 或其后
-- [ ] `v17` tag 已推送（可选）
+- [x] token 已校验（本次用 `GH_TOKEN` 环境变量，未持久化到 gh 配置）
+- [x] `https://github.com/Monkey-Dohn/game-turbo-fps-graph` 可访问且为 Public（API 校验）
+- [x] 首页渲染的是项目 `README.md`
+- [x] 仓库里只有 11 个文件，**没有** `fpsgraph.apk` / `classes.dex` / `unsigned2.apk` / `aligned.apk`
+- [x] `main` 分支已推送（含 `f94434b` 及其后的 docs commit）
+- [x] `v17` tag 已推送
 
 ---
 
