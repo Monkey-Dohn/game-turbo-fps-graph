@@ -1,4 +1,4 @@
-.class public Lcom/doubao/fpsgraph/Main;
+.class public Lcom/xiaomi/fpsgraph/Main;
 .super Ljava/lang/Object;
 .implements Lde/robv/android/xposed/IXposedHookLoadPackage;
 
@@ -44,9 +44,9 @@
     return-void
 
     :panel_found
-    new-instance v3, Lcom/doubao/fpsgraph/PanelHook;
+    new-instance v3, Lcom/xiaomi/fpsgraph/PanelHook;
 
-    invoke-direct {v3}, Lcom/doubao/fpsgraph/PanelHook;-><init>()V
+    invoke-direct {v3}, Lcom/xiaomi/fpsgraph/PanelHook;-><init>()V
 
     const-string v0, "onAttachedToWindow"
 

@@ -29,7 +29,7 @@
 - 系统：HyperOS `4.0.5.0.XPCCNXM`，Android 17 / SDK 37，build `CP2A.260605.016`
 - 屏幕：1080 × 2400，120 Hz
 - Root：Bootloader 已解锁，Magisk 31.1 + Zygisk + LSPosed 2.2.1
-- 模块：`com.doubao.fpsgraph`，versionName `1.0`
+- 模块：`com.xiaomi.fpsgraph`，versionName `1.0`
 - LSPosed 作用域：仅 `com.miui.securitycenter`
 - 当前代码：**v17**，已签名、已安装、已实测
 - 当前视觉：**去掉徽章，改成极简内联 `84 FPS`**；数字 16sp 青色，`FPS` 8sp 灰白，无背景、无描边，整体下移 5dp。
@@ -167,7 +167,7 @@ Game Turbo 的帧率曲线没有被删除，而是新版布局把 `FrameRateView
 ## 4. 模块结构
 
 ```text
-com.doubao.fpsgraph
+com.xiaomi.fpsgraph
 ├── Main                    入口，实现 IXposedHookLoadPackage
 └── PanelHook               核心视觉 Hook
 ```
@@ -179,7 +179,7 @@ com.doubao.fpsgraph
 `AndroidManifest.xml`：
 
 ```xml
-<manifest package="com.doubao.fpsgraph"
+<manifest package="com.xiaomi.fpsgraph"
     android:versionCode="1"
     android:versionName="1.0">
     <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="36"/>
@@ -195,7 +195,7 @@ com.doubao.fpsgraph
 `assets/xposed_init` 内容：
 
 ```text
-com.doubao.fpsgraph.Main
+com.xiaomi.fpsgraph.Main
 ```
 
 ### 4.2 Main（v17）
@@ -245,7 +245,7 @@ private static int lastCurve;
 对应的 smali 判断（`src/PanelHook.smali` 第 28–34 行）：
 
 ```smali
-sget v2, Lcom/doubao/fpsgraph/PanelHook;->lastCurve:I
+sget v2, Lcom/xiaomi/fpsgraph/PanelHook;->lastCurve:I
 invoke-static {v1}, Ljava/lang/System;->identityHashCode(Ljava/lang/Object;)I
 move-result v3
 if-eqz v2, :first_apply    # lastCurve==0 → 首次应用
@@ -502,7 +502,7 @@ python "C:\Users\Dohn\AppData\Local\Temp\fpsgraph\repack.py"
 
 然后在 LSPosed Manager 中确认：
 
-- 模块 `com.doubao.fpsgraph` 已启用；
+- 模块 `com.xiaomi.fpsgraph` 已启用；
 - 作用域勾选 `com.miui.securitycenter`；
 - 必要时重启手机，或至少强制停止 `com.miui.securitycenter` 后重新打开游戏。
 
@@ -591,13 +591,13 @@ FPSGRAPH panel apply   # 只应出现一次
 
 模块没有修改系统分区，回滚很简单：
 
-1. LSPosed Manager 中停用 `com.doubao.fpsgraph`；
+1. LSPosed Manager 中停用 `com.xiaomi.fpsgraph`；
 2. 强制停止 `com.miui.securitycenter`；
 3. 重新打开游戏 / 侧边栏，面板恢复原状；
 4. 如需彻底移除：
 
 ```powershell
-& "C:\platform-tools\adb.exe" uninstall com.doubao.fpsgraph
+& "C:\platform-tools\adb.exe" uninstall com.xiaomi.fpsgraph
 ```
 
 不需要刷机，不需要还原 `/product`。

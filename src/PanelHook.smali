@@ -1,4 +1,4 @@
-.class public Lcom/doubao/fpsgraph/PanelHook;
+.class public Lcom/xiaomi/fpsgraph/PanelHook;
 .super Lde/robv/android/xposed/XC_MethodHook;
 
 .field private static lastCurve:I
@@ -25,7 +25,7 @@
     move-result-object v1
     if-eqz v1, :done
 
-    sget v2, Lcom/doubao/fpsgraph/PanelHook;->lastCurve:I
+    sget v2, Lcom/xiaomi/fpsgraph/PanelHook;->lastCurve:I
 
     invoke-static {v1}, Ljava/lang/System;->identityHashCode(Ljava/lang/Object;)I
     move-result v3
@@ -244,7 +244,7 @@
 
     invoke-static {v1}, Ljava/lang/System;->identityHashCode(Ljava/lang/Object;)I
     move-result v2
-    sput v2, Lcom/doubao/fpsgraph/PanelHook;->lastCurve:I
+    sput v2, Lcom/xiaomi/fpsgraph/PanelHook;->lastCurve:I
 
     :done
     return-void

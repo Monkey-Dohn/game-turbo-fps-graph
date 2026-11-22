@@ -39,7 +39,7 @@
 | Game Turbo 宿主 | `com.miui.securitycenter` `13.6.5-261003.0.1` |
 | Root | Magisk 31.1 + Zygisk |
 | Hook 框架 | LSPosed 2.2.1 |
-| 模块 | `com.doubao.fpsgraph`，versionName `1.0` |
+| 模块 | `com.xiaomi.fpsgraph`，versionName `1.0` |
 
 其它机型或 HyperOS 版本可以复用思路，但布局资源 ID 和混淆后的类名可能不同，**不保证直接可用**。不要为了适配其它版本去替换系统 APK。
 
