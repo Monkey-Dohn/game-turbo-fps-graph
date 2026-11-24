@@ -2,29 +2,6 @@
 
 ---
 
-## 效果
-
-| | 改造前 | 改造后 |
-|---|---|---|
-| 帧率曲线 | 被隐藏，只剩圆形表盘和大号数字 | 顶部显示约 60dp 高的青色曲线 |
-| 圆形表盘 | 显示 | 改为自绘 36dp 圆形细环表盘，只保留顶部“帧率”标签和中间数字 |
-| FPS 数字 | 居中大号数字 | 保留在圆形表盘中心，放在 CPU / 内存中间；数字放大到 12sp，示例 `77` / `79` |
-| 样式 | — | 深色圆底 + 3px 细环，数字白色；已去掉底部 `FPS` 字样 |
-| 模式配色 | — | 均衡模式蓝色 `#3A8DFF`，性能模式红色 `#FF5A4A`，切换后自动更新 |
-| 曲线数据 | — | 由系统 `FrameRateDataService` 按约 1 秒 1 点采样；模块不再常驻采样，也不额外缓存，面板重开时显示服务已保留的历史 |
-
-实际效果（仅保留 Game Turbo 性能面板区域）：
-
-均衡模式（蓝色）：
-
-![Game Turbo 性能面板 - 均衡模式](docs/game-turbo-panel.png)
-
-性能模式（红色）：
-
-![Game Turbo 性能面板 - 性能模式](docs/game-turbo-panel-performance.png)
-
----
-
 ## 适用环境
 
 当前只在下面这套环境完整验证：
@@ -41,35 +18,6 @@
 | 模块 | `com.xiaomi.fpsgraph`，versionName `1.01`（构建标记 v1.02，md5 `54a5f33f50b8c232d4d28f2887fa7f2d`） |
 
 其它机型或 HyperOS 版本可以复用思路，但布局资源 ID 和混淆后的类名可能不同，**不保证直接可用**。不要为了适配其它版本去替换系统 APK。
-
----
-
-## 从源码重建
-
-依赖：
-
-- Windows + PowerShell
-- Java 8
-- smali / dexlib2 / guava / antlr / jcommander / util
-- Android SDK Build-Tools（`zipalign`、`apksigner`）
-- ADB（仅部署调试时需要）
-
-步骤：
-
-1. 打开 `rebuild.ps1`，按本机路径修改顶部变量：
-   - `$Java`
-   - `$SmaliRoot`
-   - `$BuildTools`
-   - `$Adb`
-2. 执行：
-
-   ```powershell
-   .\rebuild.ps1
-   ```
-
-脚本会把 `src/*.smali` 汇编成 `classes.dex`，替换进 `unsigned.apk`，再对齐、签名，输出 `fpsgraph.apk`。构建产物不提交进仓库。
-
-> `debug.keystore` 只用于调试签名；长期维护建议换成自己的 key，并固定同一个 key 更新。
 
 ---
 
